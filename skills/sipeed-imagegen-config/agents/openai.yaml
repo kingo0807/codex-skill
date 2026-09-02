@@ -1,4 +1,4 @@
 interface:
-  display_name: "Sipeed ImageGen Config"
-  short_description: "Configure and verify Sipeed relay image generation"
-  default_prompt: "Use $sipeed-imagegen-config to safely configure and verify Sipeed relay image generation on this Windows device."
+  display_name: "Sipeed 中转生图配置"
+  short_description: "安全配置并验证 Sipeed 中转的 Codex 内置生图"
+  default_prompt: "使用 $sipeed-imagegen-config，在这台 Windows 设备上安全配置并验证 Sipeed 中转生图。"

@@ -1,8 +1,8 @@
-# Windows User-scope credential setup
+# Windows User 作用域凭据设置
 
-Read this file only when `OPENAI_API_KEY` is absent from Windows User scope.
+仅当 Windows User 作用域中不存在 `OPENAI_API_KEY` 时读取本文件。
 
-Do not ask the user to paste a key into chat. Ask them to run this in their own local PowerShell window:
+不要要求用户把密钥粘贴到聊天中。请用户在自己的本机 PowerShell 窗口运行：
 
 ```powershell
 $secret = Read-Host "请输入中转 API Key" -AsSecureString
@@ -26,4 +26,4 @@ if ([Environment]::GetEnvironmentVariable("OPENAI_API_KEY", "User")) {
 }
 ```
 
-The user should return only the final `OK` or `MISSING` status, never the key. A process that was already running normally will not inherit a newly written User-scope environment variable. Continue configuration without echoing the value; load it explicitly into the fresh validation child process, then remind the user to restart Codex completely.
+用户只应返回最后的 `OK` 或 `MISSING` 状态，绝不能返回密钥本身。已经运行的进程通常不会继承刚写入的 User 作用域环境变量。继续配置时不要回显该值；在新的验证子进程中显式加载它，最后提醒用户完全重启 Codex。

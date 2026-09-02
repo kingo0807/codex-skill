@@ -1,63 +1,63 @@
 ---
 name: sipeed-imagegen-config
-description: Configure and verify Codex built-in image generation through the Sipeed OpenAI-compatible relay on Windows. Use when the user asks to set up, repair, or validate Sipeed relay image generation in Codex; do not use for ordinary image generation requests.
+description: 在 Windows 上通过 Sipeed OpenAI 兼容中转配置并验证 Codex 内置图像生成。仅当用户要求配置、修复或验证 Sipeed 中转生图时使用；普通生图请求不要使用。
 ---
 
-# Sipeed ImageGen Config
+# Sipeed 中转生图配置
 
-Configure the current Windows device so Codex can use its built-in image-generation path through the Sipeed relay while preserving unrelated user settings.
+在保留用户无关设置的前提下，配置当前 Windows 设备，让 Codex 通过 Sipeed 中转使用内置图像生成路径。
 
-## Fixed contract
+## 固定约定
 
-- Relay base URL: `https://ai.corp.sipeed.com/v1`
-- Credential environment variable: `OPENAI_API_KEY`
-- Actor-authorization marker: `local-relay`
-- Image model: `gpt-image-2`, selected by the image-generation path rather than as the conversational model
+- 中转基础地址：`https://ai.corp.sipeed.com/v1`
+- 凭据环境变量：`OPENAI_API_KEY`
+- actor-authorization 标记：`local-relay`
+- 图像模型：`gpt-image-2`，由图像生成路径选择，不作为对话主模型
 
-## Safety boundaries
+## 安全边界
 
-- Never print, echo, log, record, or return the API key. Report only whether it exists.
-- Never place the API key in TOML, a script, a command line, a prompt, a repository, or an HTTP header shown to the user.
-- Do not automatically copy a credential from `auth.json` for use with a different network domain. If the Windows User-scope variable is absent, follow [the local secure-input procedure](references/windows-key-setup.md).
-- Do not use Node, Python, or another credential helper for provider authentication.
-- Do not modify a Codex binary, switch to an official provider as a workaround, or install an unrelated plugin or skill.
-- Re-read every file immediately before editing it. Preserve unrelated settings and avoid duplicate TOML tables.
-- Keep provider and authentication settings in the user-level Codex configuration. Do not put them in repository-local `.codex/config.toml`.
-- Create a timestamped backup beside the user configuration before editing. Do not copy that backup into a repository or display its contents.
-- Obey local filesystem, network, and approval boundaries. If permission is denied, report the exact blocked step rather than bypassing it.
+- 绝不打印、回显、记录、截取或返回 API Key；只能报告“是否存在”。
+- 绝不把 API Key 放进 TOML、脚本、命令行、提示词、仓库或展示给用户的 HTTP Header。
+- 不要自动从 `auth.json` 复制凭据给另一个网络域名使用。如果 Windows User 作用域变量不存在，遵循[本机安全输入流程](references/windows-key-setup.md)。
+- 不要使用 Node、Python 或其他凭据辅助程序进行提供商鉴权。
+- 不要修改 Codex 二进制，不要以切换官方提供商作为绕过方案，也不要安装无关的插件或 Skill。
+- 每次编辑前立即重新读取目标文件；保留无关设置，避免重复的 TOML 表。
+- 提供商和鉴权设置必须放在用户级 Codex 配置中；不要放进仓库本地的 `.codex/config.toml`。
+- 编辑用户配置前，在配置文件旁创建带时间戳的备份；不要把备份复制进仓库或显示其内容。
+- 遵守本机文件系统、网络和审批边界。若权限被拒绝，报告具体被阻断的步骤，不要绕过限制。
 
-## Configure and verify
+## 配置与验证
 
-1. Confirm the operating system is Windows. Locate the native `codex.exe`, report its version, and inspect its current CLI help or feature listing when needed.
-2. Resolve `CODEX_HOME`; when unset, use the normal user Codex directory. Locate the user-level `config.toml` without assuming it already exists.
-3. Check `OPENAI_API_KEY` in Process, User, and Machine scopes. Output only `true` or `false` for each scope. Never read the value into displayed output.
-4. If the User-scope variable is missing, read [references/windows-key-setup.md](references/windows-key-setup.md), present that local PowerShell procedure, and wait for the user to confirm `OPENAI_API_KEY(User)=OK`. A running Codex process normally will not inherit the newly written value.
-5. Load the User-scope key into memory without displaying it and probe the relay's `/models` and `/responses` endpoints. Do not enable verbose HTTP logging. Confirm that `/models` includes `gpt-image-2` and that `/responses` accepts a minimal request using a conversational model exposed by the relay.
-6. Read the current user configuration and identify the selected `model_provider` and its exact table ID. If the selected custom provider already targets the Sipeed relay, minimally update that table. Otherwise create a `sipeed` provider and select it only after the endpoint probes succeed.
-7. Read [references/compatibility.md](references/compatibility.md), then apply the known-compatible provider shape for the installed Codex version:
-   - Use the exact base URL above; never append another `/v1`.
-   - Set `wire_api = "responses"`, `requires_openai_auth = false`, and `env_key = "OPENAI_API_KEY"`.
-   - Add only the fixed non-secret actor marker `x-openai-actor-authorization = "local-relay"`.
-   - Remove command-backed `auth` from this provider because it conflicts with `env_key` and `requires_openai_auth`.
-   - Merge `image_generation = true` into the existing `[features]` table or create that table once.
-   - Preserve the user's conversational model when the relay exposes it. For validation, prefer `gpt-5.4` when the relay lists it; otherwise use another listed model that supports tool calls. Never set the conversational model to `gpt-image-2`.
-8. Re-read the edited file and produce a redacted diff. Confirm that the TOML has no duplicate tables, no credential literals, no command auth for the target provider, and no Node-helper reference.
-9. Locate the native executable rather than an npm or other wrapper. Start a fresh PowerShell child process, load the key from Windows User scope into that child without displaying it, and run `codex.exe exec` with the configured custom provider and the selected conversational model.
-10. Give the diagnostic task this invariant: call the built-in image-generation tool exactly once to generate a white image with one centered blue circle; do not use shell, Python, SVG, Canvas, an MCP wrapper, or an external image tool as a substitute.
-11. Treat validation as successful only when the built-in image-generation tool is visible, the call completes, a local PNG path is produced, and no command or Node authentication helper participates in the provider chain.
-12. If the provider previously referenced `custom-provider-auth.cjs`, confirm all references are gone. Delete only that exact authentication-only helper, only when it is inside the resolved Codex user directory and no reference remains. Report the deletion.
-13. If the installed Codex version no longer supports the actor-authorized image path, stop after reporting the observed gate difference. Describe a local MCP image wrapper only as an unimplemented fallback; do not install it without a new user request.
+1. 确认操作系统是 Windows。定位原生 `codex.exe`，报告版本；必要时检查当前 CLI 帮助或功能列表。
+2. 解析 `CODEX_HOME`；未设置时使用通常的用户级 Codex 目录。定位用户级 `config.toml`，不要假定文件一定存在。
+3. 分别检查 Process、User、Machine 三个作用域中的 `OPENAI_API_KEY`。每个作用域只输出 `true` 或 `false`，绝不把值读入显示输出。
+4. 如果 User 作用域变量缺失，读取 [references/windows-key-setup.md](references/windows-key-setup.md)，展示其中的本机 PowerShell 流程，并等待用户确认 `OPENAI_API_KEY(User)=OK`。已经运行的 Codex 进程通常不会继承刚写入的值。
+5. 在不显示密钥的前提下把 User 作用域的 Key 加载到内存，探测中转的 `/models` 和 `/responses` 端点。不要开启详细 HTTP 日志。确认 `/models` 包含 `gpt-image-2`，并确认 `/responses` 能用中转提供的对话模型接受最小请求。
+6. 读取当前用户配置，识别所选 `model_provider` 及其精确表 ID。如果当前所选自定义提供商已经指向 Sipeed 中转，只最小化更新该表；否则创建 `sipeed` 提供商，并仅在端点探测成功后将其设为当前提供商。
+7. 读取 [references/compatibility.md](references/compatibility.md)，然后根据已安装 Codex 版本应用已知兼容的提供商结构：
+   - 使用上面的完整基础地址，绝不能再追加 `/v1`。
+   - 设置 `wire_api = "responses"`、`requires_openai_auth = false` 和 `env_key = "OPENAI_API_KEY"`。
+   - 只添加固定且非秘密的 actor 标记 `x-openai-actor-authorization = "local-relay"`。
+   - 删除该提供商的命令鉴权 `auth`，因为它与 `env_key` 和 `requires_openai_auth` 冲突。
+   - 将 `image_generation = true` 合并进已有 `[features]` 表；如果不存在才创建一次。
+   - 中转提供该模型时保留用户原有的对话模型。验证优先使用中转列出的 `gpt-5.4`；否则使用另一个支持工具调用的已列出模型。绝不能把对话主模型设为 `gpt-image-2`。
+8. 重新读取编辑后的文件并生成脱敏 diff。确认 TOML 没有重复表、凭据字面量、目标提供商的命令鉴权或 Node 辅助程序引用。
+9. 定位原生可执行文件，不要使用 npm 或其他包装器。启动新的 PowerShell 子进程，在不显示密钥的情况下从 User 作用域加载 Key，并使用配置好的自定义提供商和对话模型运行 `codex.exe exec`。
+10. 要求诊断任务严格执行一次内置图像生成调用，生成“白底、居中的蓝色圆形”；不得用 shell、Python、SVG、Canvas、MCP 包装器或外部图像工具替代。
+11. 只有同时满足以下条件才算验证成功：内置图像生成工具可见、调用完成、产生本地 PNG 路径，且提供商鉴权链没有调用命令或 Node 辅助程序。
+12. 如果该提供商之前引用了 `custom-provider-auth.cjs`，确认所有引用已消失。仅当该文件位于解析出的 Codex 用户目录内且不再有引用时，才删除这个专用鉴权辅助文件，并报告删除结果。
+13. 如果当前 Codex 版本不再支持 actor-authorized 图像路径，停止并报告实际观察到的门控差异。只能说明本地 MCP 图像包装器这一未实施的备选方案；没有新的用户请求不得安装。
 
-## Final report
+## 最终报告
 
-Report only:
+只报告以下内容：
 
-- Codex version and native executable path.
-- Whether the User-scope variable exists and whether the current App process inherited it.
-- The selected provider ID and whether `env_key` is active.
-- Whether command auth and Node references are absent.
-- Results for `/models`, `/responses`, built-in image generation, and the diagnostic PNG path.
-- Files modified, backed up, or deleted.
-- A reminder to fully exit Codex, including background processes, restart it, and open a new task using a tool-capable conversational model.
+- Codex 版本和原生可执行文件路径。
+- User 作用域变量是否存在，以及当前 App 进程是否继承了它。
+- 当前提供商 ID，以及 `env_key` 是否生效。
+- 命令鉴权和 Node 引用是否已经消失。
+- `/models`、`/responses`、内置图像生成和诊断 PNG 路径的结果。
+- 修改、备份或删除了哪些文件。
+- 提醒用户完全退出 Codex（包括后台进程）后重启，并使用支持工具调用的对话模型新建任务。
 
-Never include the credential or an unredacted authentication payload in the report.
+报告中绝不能包含凭据或未脱敏的鉴权载荷。

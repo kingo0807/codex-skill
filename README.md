@@ -1,35 +1,35 @@
 # codex-skill
 
-Reusable Codex skills maintained by `kingo0807`.
+由 `kingo0807` 维护的可复用 Codex Skill 集合。
 
-## Sipeed ImageGen Config
+## Sipeed 中转生图配置
 
-`sipeed-imagegen-config` configures and verifies Codex built-in image generation on Windows through the OpenAI-compatible relay at `https://ai.corp.sipeed.com/v1`.
+`sipeed-imagegen-config` 用于在 Windows 上通过 `https://ai.corp.sipeed.com/v1` 这个 OpenAI 兼容中转，配置并验证 Codex 的内置图像生成功能。
 
-### Install
+### 安装
 
-Send this prompt to Codex:
+在 Codex 中发送下面这句话：
 
 ```text
 请用 $skill-installer 从 https://github.com/kingo0807/codex-skill/tree/main/skills/sipeed-imagegen-config 安装这个 skill。
 ```
 
-The installed skill is normally available on the next turn. If it does not appear, restart Codex.
+安装完成后，Skill 通常会在下一轮对话中可用；如果没有出现，请重启 Codex。
 
-### Use
+### 使用
 
 ```text
 $sipeed-imagegen-config 请在这台 Windows 设备上安全配置并验证 Sipeed 中转生图。
 ```
 
-If the Windows User-scope `OPENAI_API_KEY` is absent, the skill pauses and asks the user to enter the relay key locally through a secure PowerShell prompt. The key must never be pasted into chat or committed to this repository.
+如果 Windows User 作用域中没有 `OPENAI_API_KEY`，Skill 会暂停，并要求用户在本机 PowerShell 的安全输入提示中输入中转密钥。密钥绝不能粘贴到聊天中，也不能提交到本仓库。
 
-### Important boundaries
+### 重要边界
 
-- The skill keeps `OPENAI_API_KEY` as the provider credential environment variable.
-- It never places credentials in `config.toml`, scripts, logs, prompts, or repository files.
-- It does not set the conversational model to `gpt-image-2`; Codex image generation selects the image model separately.
-- The actor-authorization marker is an implementation-level compatibility path and is verified against the installed Codex version before success is reported.
-- Configuration changes remain subject to the user's local Codex permissions and approval policy.
+- Skill 固定使用 `OPENAI_API_KEY` 作为提供商凭据环境变量。
+- Skill 绝不会把凭据写入 `config.toml`、脚本、日志、提示词或仓库文件。
+- Skill 不会把对话主模型设置为 `gpt-image-2`；Codex 的图像生成路径会单独选择图像模型。
+- actor-authorization 标记属于实现级兼容路径；只有根据当前安装的 Codex 版本验证通过后，Skill 才会报告成功。
+- 配置修改仍受用户本机 Codex 的权限和审批策略约束。
 
-Official references: [Build skills](https://learn.chatgpt.com/docs/build-skills), [advanced configuration](https://learn.chatgpt.com/docs/config-file/config-advanced), and [image generation](https://learn.chatgpt.com/docs/image-generation).
+官方参考：[创建 Skill](https://learn.chatgpt.com/docs/build-skills)、[高级配置](https://learn.chatgpt.com/docs/config-file/config-advanced) 和 [图像生成](https://learn.chatgpt.com/docs/image-generation)。
