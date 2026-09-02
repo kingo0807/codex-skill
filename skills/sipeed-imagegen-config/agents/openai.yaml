@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sipeed ImageGen Config"
+  short_description: "Configure and verify Sipeed relay image generation"
+  default_prompt: "Use $sipeed-imagegen-config to safely configure and verify Sipeed relay image generation on this Windows device."

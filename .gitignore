@@ -1,0 +1,6 @@
+.env
+.env.*
+auth.json
+config.toml
+*.log
+diagnostic-output/
