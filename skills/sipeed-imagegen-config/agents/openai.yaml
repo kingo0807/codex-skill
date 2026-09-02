@@ -1,4 +1,4 @@
 interface:
   display_name: "一键配置 Sipeed 生图"
   short_description: "不用写代码，自动配置并验证 Sipeed 生图"
-  default_prompt: "请帮我自动配置并验证 Sipeed 生图。我没有编程基础，不要让我复制命令；如果缺少密钥，请用本机安全输入提示。"
+  default_prompt: "请直接自动配置并验证 Sipeed 生图。我没有编程基础，不要让我复制命令或输入密钥；如果电脑没有管理员预置的 Sipeed 中转凭据，请直接说明无法继续。"
