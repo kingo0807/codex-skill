@@ -1,29 +1,13 @@
-# Windows User 作用域凭据设置
+# Windows User 作用域凭据设置（内部流程）
 
 仅当 Windows User 作用域中不存在 `OPENAI_API_KEY` 时读取本文件。
 
-不要要求用户把密钥粘贴到聊天中。请用户在自己的本机 PowerShell 窗口运行：
+本文档供 Skill 内部执行，不要原样展示给零基础用户，也不要要求用户复制下面的代码。
 
-```powershell
-$secret = Read-Host "请输入中转 API Key" -AsSecureString
-[IntPtr]$ptr = [IntPtr]::Zero
-try {
-    $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secret)
-    $plain = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
-    [Environment]::SetEnvironmentVariable("OPENAI_API_KEY", $plain, "User")
-}
-finally {
-    if ($ptr -ne [IntPtr]::Zero) {
-        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
-    }
-    Remove-Variable plain, secret -ErrorAction SilentlyContinue
-}
+对用户只需说明：首次配置需要在本机安全输入框输入一次 Sipeed API Key；输入时不会显示字符，密钥不会发送到聊天或写入仓库。然后在交互式本机终端中运行 `scripts/setup-user-key.ps1`，只向用户报告 `OPENAI_API_KEY(User)=OK` 或 `MISSING`。
 
-if ([Environment]::GetEnvironmentVariable("OPENAI_API_KEY", "User")) {
-    "OPENAI_API_KEY(User)=OK"
-} else {
-    "OPENAI_API_KEY(User)=MISSING"
-}
-```
+如果当前 Codex 会话无法打开交互式输入，停止并用通俗中文说明需要用户允许本机终端交互；不要把脚本内容退回给用户。
+
+具体实现位于同一 Skill 的 `scripts/setup-user-key.ps1`。运行时只允许脚本返回状态，不得回显密钥、完整环境变量值或脚本内容。
 
 用户只应返回最后的 `OK` 或 `MISSING` 状态，绝不能返回密钥本身。已经运行的进程通常不会继承刚写入的 User 作用域环境变量。继续配置时不要回显该值；在新的验证子进程中显式加载它，最后提醒用户完全重启 Codex。

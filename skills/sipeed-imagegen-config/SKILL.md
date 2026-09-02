@@ -1,11 +1,19 @@
 ---
 name: sipeed-imagegen-config
-description: 在 Windows 上通过 Sipeed OpenAI 兼容中转配置并验证 Codex 内置图像生成。仅当用户要求配置、修复或验证 Sipeed 中转生图时使用；普通生图请求不要使用。
+description: 面向没有编程基础的 Windows 用户，一句话自动配置并验证 Sipeed 中转的 Codex 内置图像生成；用户说“帮我配置 Sipeed 生图”等类似请求时使用。普通生图请求不要使用。
 ---
 
 # Sipeed 中转生图配置
 
 在保留用户无关设置的前提下，配置当前 Windows 设备，让 Codex 通过 Sipeed 中转使用内置图像生成路径。
+
+## 零基础用户体验
+
+- 用户不需要知道 PowerShell、TOML、环境变量或配置文件。自动完成检查、备份、修改和验证，不要让用户复制命令、手动编辑文件或自己寻找配置目录。
+- 开始前只用一句通俗中文说明即将做什么；随后直接使用工具执行。不要在聊天回复中展示内部脚本、完整命令、配置文件内容或脱敏 diff。
+- 如果缺少密钥，明确告诉用户“需要你在本机安全输入框输入一次密钥，输入时不会显示字符，密钥不会发送到聊天”；然后运行 [scripts/setup-user-key.ps1](scripts/setup-user-key.ps1) 的本机安全输入流程。不要要求用户把密钥发到聊天，也不要让用户手动复制脚本。
+- 如果当前会话无法打开交互式安全输入提示，只说明“安全输入窗口未能打开，请允许 Codex 使用本机终端后重试”，不要退回展示 PowerShell 代码。
+- 成功后用“已完成/需要重启/未完成及原因”的短句报告；只有用户追问技术细节时，才解释配置字段。
 
 ## 固定约定
 
@@ -31,7 +39,7 @@ description: 在 Windows 上通过 Sipeed OpenAI 兼容中转配置并验证 Cod
 1. 确认操作系统是 Windows。定位原生 `codex.exe`，报告版本；必要时检查当前 CLI 帮助或功能列表。
 2. 解析 `CODEX_HOME`；未设置时使用通常的用户级 Codex 目录。定位用户级 `config.toml`，不要假定文件一定存在。
 3. 分别检查 Process、User、Machine 三个作用域中的 `OPENAI_API_KEY`。每个作用域只输出 `true` 或 `false`，绝不把值读入显示输出。
-4. 如果 User 作用域变量缺失，读取 [references/windows-key-setup.md](references/windows-key-setup.md)，展示其中的本机 PowerShell 流程，并等待用户确认 `OPENAI_API_KEY(User)=OK`。已经运行的 Codex 进程通常不会继承刚写入的值。
+4. 如果 User 作用域变量缺失，读取 [references/windows-key-setup.md](references/windows-key-setup.md) 了解约束，并在交互式本机终端中运行 [scripts/setup-user-key.ps1](scripts/setup-user-key.ps1)。不要把脚本内容展示给用户；等待脚本只返回 `OPENAI_API_KEY(User)=OK` 或 `MISSING`。已经运行的 Codex 进程通常不会继承刚写入的值。
 5. 在不显示密钥的前提下把 User 作用域的 Key 加载到内存，探测中转的 `/models` 和 `/responses` 端点。不要开启详细 HTTP 日志。确认 `/models` 包含 `gpt-image-2`，并确认 `/responses` 能用中转提供的对话模型接受最小请求。
 6. 读取当前用户配置，识别所选 `model_provider` 及其精确表 ID。如果当前所选自定义提供商已经指向 Sipeed 中转，只最小化更新该表；否则创建 `sipeed` 提供商，并仅在端点探测成功后将其设为当前提供商。
 7. 读取 [references/compatibility.md](references/compatibility.md)，然后根据已安装 Codex 版本应用已知兼容的提供商结构：
@@ -41,7 +49,7 @@ description: 在 Windows 上通过 Sipeed OpenAI 兼容中转配置并验证 Cod
    - 删除该提供商的命令鉴权 `auth`，因为它与 `env_key` 和 `requires_openai_auth` 冲突。
    - 将 `image_generation = true` 合并进已有 `[features]` 表；如果不存在才创建一次。
    - 中转提供该模型时保留用户原有的对话模型。验证优先使用中转列出的 `gpt-5.4`；否则使用另一个支持工具调用的已列出模型。绝不能把对话主模型设为 `gpt-image-2`。
-8. 重新读取编辑后的文件并生成脱敏 diff。确认 TOML 没有重复表、凭据字面量、目标提供商的命令鉴权或 Node 辅助程序引用。
+8. 重新读取编辑后的文件并在内部生成脱敏 diff。确认 TOML 没有重复表、凭据字面量、目标提供商的命令鉴权或 Node 辅助程序引用；不要把 diff 原文发给零基础用户。
 9. 定位原生可执行文件，不要使用 npm 或其他包装器。启动新的 PowerShell 子进程，在不显示密钥的情况下从 User 作用域加载 Key，并使用配置好的自定义提供商和对话模型运行 `codex.exe exec`。
 10. 要求诊断任务严格执行一次内置图像生成调用，生成“白底、居中的蓝色圆形”；不得用 shell、Python、SVG、Canvas、MCP 包装器或外部图像工具替代。
 11. 只有同时满足以下条件才算验证成功：内置图像生成工具可见、调用完成、产生本地 PNG 路径，且提供商鉴权链没有调用命令或 Node 辅助程序。
@@ -50,7 +58,7 @@ description: 在 Windows 上通过 Sipeed OpenAI 兼容中转配置并验证 Cod
 
 ## 最终报告
 
-只报告以下内容：
+面向零基础用户，只报告以下简短结果，不要输出命令或代码：
 
 - Codex 版本和原生可执行文件路径。
 - User 作用域变量是否存在，以及当前 App 进程是否继承了它。
